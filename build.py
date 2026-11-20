@@ -13,7 +13,7 @@ ROW = 24                      # height of one numbered line
 LETTERHEAD = ["AARYAN PRADHAN", "IIT KHARAGPUR, CLASS OF 2027", "BOMBAY 400076"]
 HELLO = "HI, I TINKER WITH OPEN-SOURCE SOFTWARE."
 ABOUT = [
-    "> I USE ARCH BTW, BUT MINT WAS MY FIRST LOVE (5TH GRADE).",
+    "> i use arch btw, but mint was my first love",
     "> I BUILD WEB APPS, ML MODELS AND SMALL TOOLS.",
     "> I WRITE MATH NOTES LIKE EUCLID: AXIOMS, THEN PROOFS.",
 ]
