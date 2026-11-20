@@ -13,10 +13,13 @@ ROW = 24                      # height of one numbered line
 LETTERHEAD = ["AARYAN PRADHAN", "IIT KHARAGPUR, CLASS OF 2027", "BOMBAY 400076"]
 HELLO = "HI, I TINKER WITH OPEN-SOURCE SOFTWARE."
 ABOUT = [
-    "> i use arch btw, but mint was my first love",
-    "> I BUILD WEB APPS, ML MODELS AND SMALL TOOLS.",
-    "> I WRITE MATH NOTES LIKE EUCLID: AXIOMS, THEN PROOFS.",
+    "i use arch btw, but mint was my first love",
+    "i write math notes like euclid: axioms, then proofs.",
 ]
+BASE, ROWB = 0x7FFE2027, 16  # dump start address, bytes per row
+CODE = ["auto* p = reinterpret_cast<unsigned char*>(&about);",
+        "for (size_t i = 0; i < sizeof about; i++) dump(p[i]);"]
+PROMPT = "$ ./about"
 STACK = [
     ("LANGUAGES", ["PYTHON", "C++", "C", "C#", "RUST", "JAVA", "TYPESCRIPT", "JAVASCRIPT", "R", "BASH"]),
     ("WEB", ["REACT", "NODE", "EXPRESS", "DJANGO", "TAILWIND", "VITE", "FIREBASE"]),
@@ -71,6 +74,16 @@ FONT = {
     "/": "....# ....# ...#. ..#.. .#... #.... #....",
     ">": ".#... ..#.. ...#. ....# ...#. ..#.. .#...",
     "+": "..... ..#.. ..#.. ##### ..#.. ..#.. .....",
+    '"': ".#.#. .#.#. ..... ..... ..... ..... .....",
+    "*": "..... #.#.# .###. ##### .###. #.#.# .....",
+    "<": "...#. ..#.. .#... #.... .#... ..#.. ...#.",
+    ";": "..... .##.. .##.. ..... .##.. ..#.. .#...",
+    "_": "..... ..... ..... ..... ..... ..... #####",
+    "&": ".##.. #..#. #.#.. .#... #.#.# #..#. .##.#",
+    "[": ".###. .#... .#... .#... .#... .#... .###.",
+    "]": ".###. ...#. ...#. ...#. ...#. ...#. .###.",
+    "\\": "#.... #.... .#... ..#.. ...#. ....# ....#",
+    "$": "..#.. .#### #.#.. .###. ..#.# ####. ..#..",
     "#": ".#.#. .#.#. ##### .#.#. ##### .#.#. .#.#.",
     "(": "...#. ..#.. .#... .#... .#... ..#.. ...#.",
     ")": ".#... ..#.. ...#. ...#. ...#. ..#.. .#...",
@@ -187,12 +200,15 @@ def render(cal, today):
             out.append(text(center, X + (CW - width(center)) // 2, ty, cls))
         y += h
 
-    def typed(s, x, ty, cls, t0, step, dur, repeat):
+    def reveal(body, x, ty, n, pitch, t0, step, dur, repeat):
         cid = f"c{next(ids)}"
-        times = [0] + [(t0 + j * step) / dur for j in range(len(s) + 1)]
-        anim = discrete("width", [0] + [j * 12 for j in range(len(s) + 1)], times, repeat).format(dur=dur)
+        times = [0] + [(t0 + j * step) / dur for j in range(n + 1)]
+        anim = discrete("width", [0] + [j * pitch for j in range(n + 1)], times, repeat).format(dur=dur)
         defs.append(f'<clipPath id="{cid}"><rect x="{x - 1}" y="{ty - 2}" height="22" width="0">{anim}</rect></clipPath>')
-        return f'<g clip-path="url(#{cid})">{text(s, x, ty, cls)}</g>'
+        return f'<g clip-path="url(#{cid})">{body}</g>'
+
+    def typed(s, x, ty, cls, t0, step, dur, repeat):
+        return reveal(text(s, x, ty, cls), x, ty, len(s), 12, t0, step, dur, repeat)
 
     rule = "# " + "-" * (CW // 12 - 2)
 
@@ -237,8 +253,8 @@ def render(cal, today):
             lit.append(f'<rect {cell} opacity="{SHADE[LEVEL[d["contributionLevel"]]]}"/>')
     T, walk = 16, 0.6
     times = [walk * k / len(weeks) for k in range(len(weeks) + 1)]
-    reveal = discrete("width", [k * 13 for k in range(len(weeks) + 1)], times).format(dur=T)
-    defs.append(f'<clipPath id="walk"><rect x="{gx}" y="{gy}" height="91" width="0">{reveal}</rect></clipPath>')
+    walk = discrete("width", [k * 13 for k in range(len(weeks) + 1)], times).format(dur=T)
+    defs.append(f'<clipPath id="walk"><rect x="{gx}" y="{gy}" height="91" width="0">{walk}</rect></clipPath>')
     out.append(f'<g class="i">{"".join(ghost)}</g><g class="i" clip-path="url(#walk)">{"".join(lit)}</g>')
     py = gy - 30
     pos = [f"{gx - 34},{py}"] + [f"{gx + (k - 1) * 13 - 7},{py}" for k in range(1, len(weeks) + 1)]
@@ -265,14 +281,33 @@ def render(cal, today):
     # About me: typed line by line, held, then typed again.
     line(center="EXHIBIT B: ABOUT ME", cls="i")
     line()
-    T2, step = 15, 0.045
-    t, events = 0.6, [(0, X, y + 5)]
-    for i, s in enumerate(ABOUT):
+    # The array as it sits in memory: each string's bytes, then its 00.
+    for c in CODE:
+        line(left=c, cls="i")
+    line()
+    line(left=PROMPT, cls="g")
+    data = b"".join(s.encode() + b"\0" for s in ABOUT)
+    rows = [data[k:k + ROWB] for k in range(0, len(data), ROWB)]
+    T2, step, pitch = 15, 0.05, 42
+    hx = X + CW - (ROWB - 1) * pitch - 22  # hex flush right; each char sits under its byte
+    out.append(text("offset", X, y + 5, "g"))
+    out += [text(f"{k:02x}", hx + k * pitch, y + 5, "g") for k in range(ROWB)]
+    line()
+    t, events = 0.6, [(0, hx + 6, y + 1 + ROW)]
+    for r, row in enumerate(rows):
         ty = y + 5
-        out.append(typed(s, X, ty, "i", t, step, T2, repeat=True))
-        events += [(t + j * step, X + j * 12, ty) for j in range(len(s) + 1)]
-        t += len(s) * step + 0.5
+        out.append(text(f"0x{BASE + r * ROWB:08x}", X, ty, "g"))
+        hexes = "".join(text(f"{b:02x}", hx + k * pitch, ty, "i" if b else "g") for k, b in enumerate(row))
+        out.append(reveal(hexes, hx, ty, len(row), pitch, t, step, T2, repeat=True))
         line()
+        ty = y + 1
+        chars = "".join(text(chr(b), hx + k * pitch + 6, ty, "g") if b else text("\\0", hx + k * pitch, ty, "g")
+                        for k, b in enumerate(row) if b != 32)
+        out.append(reveal(chars, hx, ty, len(row), pitch, t, step, T2, repeat=True))
+        events += [(t + j * step, hx + j * pitch + 6, ty) for j in range(len(row) + 1)]
+        t += len(row) * step + 0.2
+        line()
+    assert t < T2, t
     ts = [e[0] / T2 for e in events]
     out.append(f'<rect class="i blink" width="10" height="14" x="{X}" y="{events[0][2]}">'
                f'{discrete("x", [e[1] for e in events], ts).format(dur=T2)}'
