@@ -194,7 +194,7 @@ def render(cal, today):
         defs.append(f'<clipPath id="{cid}"><rect x="{x - 1}" y="{ty - 2}" height="22" width="0">{anim}</rect></clipPath>')
         return f'<g clip-path="url(#{cid})">{text(s, x, ty, cls)}</g>'
 
-    rule = "=" * (CW // 12)
+    rule = "-" * (CW // 12)
 
     # Letterhead, on paper.
     for s in LETTERHEAD:
