@@ -217,15 +217,12 @@ def render(cal, today):
     line(left=rule, cls="g")
     line()
 
-    # Everything below sits on a band of ink, like pokerbot's exhibits.
-    band_at = len(out)
-    band_y = y
     line()
-    line(center="EXHIBIT A: A YEAR OF CODE", cls="p")
+    line(center="EXHIBIT A: A YEAR OF CODE", cls="i")
     days = [d for w in cal["weeks"] for d in w["contributionDays"]]
-    line(left="365 DAYS, ONE PENGUIN", right="UPDATED DAILY", cls="p")
+    line(left="365 DAYS, ONE PENGUIN", right="UPDATED DAILY", cls="i")
     line(left=f"CONTRIBUTIONS: {cal['totalContributions']:,}",
-         right=f"LONGEST STREAK: {longest_streak(days)} DAYS", cls="p")
+         right=f"LONGEST STREAK: {longest_streak(days)} DAYS", cls="i")
 
     # Contribution grid. A penguin walks it week by week, lighting each column.
     weeks = cal["weeks"]
@@ -241,7 +238,7 @@ def render(cal, today):
     times = [walk * k / len(weeks) for k in range(len(weeks) + 1)]
     reveal = discrete("width", [k * 13 for k in range(len(weeks) + 1)], times).format(dur=T)
     defs.append(f'<clipPath id="walk"><rect x="{gx}" y="{gy}" height="91" width="0">{reveal}</rect></clipPath>')
-    out.append(f'<g class="p">{"".join(ghost)}</g><g class="p" clip-path="url(#walk)">{"".join(lit)}</g>')
+    out.append(f'<g class="i">{"".join(ghost)}</g><g class="i" clip-path="url(#walk)">{"".join(lit)}</g>')
     py = gy - 30
     pos = [f"{gx - 34},{py}"] + [f"{gx + (k - 1) * 13 - 7},{py}" for k in range(1, len(weeks) + 1)]
     frame_a = ["visible" if k % 2 == 0 or k == len(weeks) else "hidden" for k in range(len(weeks) + 1)]
@@ -250,33 +247,33 @@ def render(cal, today):
         f'<g><animateTransform attributeName="transform" type="translate" calcMode="discrete" '
         f'values="{";".join(pos)}" keyTimes="{";".join(f"{t:.4f}" for t in times)}" dur="{T}s" repeatCount="indefinite"/>'
         f'<g transform="scale(2)">'
-        f'<g>{sprite(FEET[0], "p")}{discrete("visibility", frame_a, times).format(dur=T)}</g>'
-        f'<g visibility="hidden">{sprite(FEET[1], "p", -1)}{discrete("visibility", frame_b, times).format(dur=T)}</g>'
+        f'<g>{sprite(FEET[0], "i")}{discrete("visibility", frame_a, times).format(dur=T)}</g>'
+        f'<g visibility="hidden">{sprite(FEET[1], "i", -1)}{discrete("visibility", frame_b, times).format(dur=T)}</g>'
         f'</g></g>')
     y = gy + 91 + 12
     legend_y = y + 5
-    out.append(text("LESS", X, legend_y, "p"))
+    out.append(text("LESS", X, legend_y, "i"))
     for i, s in enumerate(SHADE):
-        out.append(f'<rect class="p" x="{X + 60 + i * 16}" y="{legend_y + 2}" width="10" height="10" opacity="{s}"/>')
-    out.append(text("MORE", X + 60 + 5 * 16 + 6, legend_y, "p"))
+        out.append(f'<rect class="i" x="{X + 60 + i * 16}" y="{legend_y + 2}" width="10" height="10" opacity="{s}"/>')
+    out.append(text("MORE", X + 60 + 5 * 16 + 6, legend_y, "i"))
     line()
     line()
     line(left=rule, cls="g")
     line()
 
     # About me: typed line by line, held, then typed again.
-    line(center="EXHIBIT B: ABOUT ME", cls="p")
+    line(center="EXHIBIT B: ABOUT ME", cls="i")
     line()
     T2, step = 15, 0.045
     t, events = 0.6, [(0, X, y + 5)]
     for i, s in enumerate(ABOUT):
         ty = y + 5
-        out.append(typed(s, X, ty, "p", t, step, T2, repeat=True))
+        out.append(typed(s, X, ty, "i", t, step, T2, repeat=True))
         events += [(t + j * step, X + j * 12, ty) for j in range(len(s) + 1)]
         t += len(s) * step + 0.5
         line()
     ts = [e[0] / T2 for e in events]
-    out.append(f'<rect class="p blink" width="10" height="14" x="{X}" y="{events[0][2]}">'
+    out.append(f'<rect class="i blink" width="10" height="14" x="{X}" y="{events[0][2]}">'
                f'{discrete("x", [e[1] for e in events], ts).format(dur=T2)}'
                f'{discrete("y", [e[2] for e in events], ts).format(dur=T2)}</rect>')
     line()
@@ -284,7 +281,7 @@ def render(cal, today):
     line()
 
     # Stack: a selection box sweeps across the tiles, like pokerbot's speed toggle.
-    line(center="EXHIBIT C: STACK", cls="p")
+    line(center="EXHIBIT C: STACK", cls="i")
     line()
     tiles = []
     for label, items in STACK:
@@ -301,10 +298,10 @@ def render(cal, today):
     slot, hold = 0.22, 6
     D = len(tiles) * slot + hold
     at = 100 * slot / D
-    css = [f"@keyframes hb{{0%{{fill:var(--paper)}}{at:.2f}%{{fill:var(--ink)}}}}",
-           f"@keyframes hf{{0%{{fill:var(--ink)}}{at:.2f}%{{fill:var(--paper)}}}}",
-           f".tb{{fill:var(--ink);stroke:var(--paper);stroke-width:2;animation:hb {D:.2f}s steps(1) infinite}}",
-           f".tf{{fill:var(--paper);animation:hf {D:.2f}s steps(1) infinite}}"]
+    css = [f"@keyframes hb{{0%{{fill:var(--ink)}}{at:.2f}%{{fill:var(--paper)}}}}",
+           f"@keyframes hf{{0%{{fill:var(--paper)}}{at:.2f}%{{fill:var(--ink)}}}}",
+           f".tb{{fill:var(--paper);stroke:var(--ink);stroke-width:2;animation:hb {D:.2f}s steps(1) infinite}}",
+           f".tf{{fill:var(--ink);animation:hf {D:.2f}s steps(1) infinite}}"]
     for k, (tx, ty, item, w) in enumerate(tiles):
         delay = f"animation-delay:{k * slot:.2f}s"
         out.append(f'<rect class="tb" style="{delay}" x="{tx}" y="{ty + 1}" width="{w}" height="22"/>')
@@ -313,7 +310,6 @@ def render(cal, today):
     line(left=f"LAST UPDATED {today.isoformat()}", right="END OF FILE", cls="g")
     y += 12
 
-    out.insert(band_at, f'<rect class="i" x="0" y="{band_y}" width="{W}" height="{y - band_y}"/>')
     glyphs = "".join(f'<path id="g{ord(c)}" d="{runs(rows.split(), "#")}"/>' for c, rows in FONT.items())
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {y}" width="{W}" height="{y}" '
             f'shape-rendering="crispEdges" role="img" aria-label="Aaryan Pradhan, IIT Kharagpur, class of 2027">'
